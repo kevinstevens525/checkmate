@@ -4,12 +4,15 @@ using UnityEngine;
 
 public class BlockScript : MonoBehaviour
 {
-    float speed = 10f;
+    float speed = 6f;
 
     Rigidbody rb;
     Renderer rend;
+    SpriteRenderer pieceRend;
 
-    int piece = 0;
+    string piece = "pawn";
+
+    bool playerColor = true;
 
     List<GameObject> adjacentMatching = new List<GameObject>(); // Adjacent blocks of the same piece
     List<GameObject> adjacentBlocks = new List<GameObject>(); // Only blocks directly up, down, left, right
@@ -21,6 +24,13 @@ public class BlockScript : MonoBehaviour
 
     BoardScript parentBS;
 
+    public Sprite pawnSprite;
+    public Sprite knightSprite;
+    public Sprite bishopSprite;
+    public Sprite rookSprite;
+    public Sprite queenSprite;
+    public Sprite kingSprite;
+
 	// Use this for initialization
 	void Start ()
     {
@@ -30,19 +40,44 @@ public class BlockScript : MonoBehaviour
 
         rend = GetComponent<Renderer>();
 
-        piece = Random.Range(1, 4);
+        pieceRend = GetComponentInChildren<SpriteRenderer>();
 
-        if (piece == 1)
+        int pieceRandom = Random.Range(1, 6);
+
+        // pieceRandom = 1;
+
+        if (pieceRandom == 1)
         {
-            rend.material.SetColor("_Color", Color.red);
+            piece = "pawn";
         }
-        else if (piece == 2)
+        else if (pieceRandom == 2)
         {
-            rend.material.SetColor("_Color", Color.green);
+            piece = "knight";
         }
-        else if (piece == 3)
+        else if (pieceRandom == 3)
         {
-            rend.material.SetColor("_Color", Color.blue);
+            piece = "bishop";
+        }
+        else if (pieceRandom == 4)
+        {
+            piece = "rook";
+        }
+        else if (pieceRandom == 5)
+        {
+            piece = "queen";
+        }
+
+        SetSpriteAndColor();
+
+        playerColor = false;
+
+        if (playerColor)
+        {
+            pieceRend.color = Color.white;
+        }
+        else
+        {
+            pieceRend.color = Color.black;
         }
     }
 	
@@ -69,6 +104,11 @@ public class BlockScript : MonoBehaviour
         {
             ActuallyDestroy();
         }
+
+        if (transform.position.y < -10)
+        {
+            Destroy(gameObject);
+        }
     }
 
     void Controls()
@@ -87,6 +127,16 @@ public class BlockScript : MonoBehaviour
             {
                 canGoRight = false;
             }
+        }
+
+        if (transform.localPosition.x < .9f)
+        {
+            canGoLeft = false;
+        }
+
+        if (transform.localPosition.x > 6.1f)
+        {
+            canGoRight = false;
         }
 
         if (Input.GetButtonDown("Left") && canGoLeft)
@@ -159,7 +209,7 @@ public class BlockScript : MonoBehaviour
         parentBS = bs;
     }
 
-    public int GetPiece()
+    public string GetPiece()
     {
         return piece;
     }
@@ -196,7 +246,53 @@ public class BlockScript : MonoBehaviour
         
         rb.constraints = RigidbodyConstraints.None;
         rb.useGravity = true;
-        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -15);
+        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -25);
+
+        rb.AddTorque(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
+
         GetComponent<Collider>().enabled = false;
+    }
+
+    private void SetSpriteAndColor()
+    {
+        float highColor = .6f;
+        float lowColor = .2f;
+
+        if (piece == "pawn")
+        {
+            pieceRend.sprite = pawnSprite;
+
+            rend.material.SetColor("_Color", new Color(highColor, lowColor, lowColor));
+        }
+        else if (piece == "knight")
+        {
+            pieceRend.sprite = knightSprite;
+
+            rend.material.SetColor("_Color", new Color(highColor, highColor, lowColor));
+        }
+        else if (piece == "bishop")
+        {
+            pieceRend.sprite = bishopSprite;
+
+            rend.material.SetColor("_Color", new Color(lowColor, highColor, lowColor));
+        }
+        else if (piece == "rook")
+        {
+            pieceRend.sprite = rookSprite;
+
+            rend.material.SetColor("_Color", new Color(lowColor, highColor, highColor));
+        }
+        else if (piece == "queen")
+        {
+            pieceRend.sprite = queenSprite;
+
+            rend.material.SetColor("_Color", new Color(lowColor, lowColor, highColor));
+        }
+        else if (piece == "king")
+        {
+            pieceRend.sprite = kingSprite;
+
+            rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
+        }
     }
 }

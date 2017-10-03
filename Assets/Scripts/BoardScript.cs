@@ -39,7 +39,8 @@ public class BoardScript : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if (currentBlock != null && currentBlock.GetComponent<Rigidbody>().velocity.magnitude < .1f)
+        if (currentBlock != null && 
+            (currentBlock.GetComponent<Rigidbody>().velocity.magnitude < .1f || !currentBlock.GetComponent<Collider>().enabled))
         {
 
             currentBlock = null;
