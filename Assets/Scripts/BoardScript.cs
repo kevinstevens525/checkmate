@@ -47,10 +47,7 @@ public class BoardScript : MonoBehaviour
 
 		if (currentBlock == null)
         {
-            GameObject newBlock = Instantiate(block, blockStartPos, Quaternion.identity);
-            newBlock.transform.SetParent(transform);
-            currentBlock = newBlock;
-            blockList.Add(newBlock);
+            CreateBlock();
         }
 	}
 
@@ -59,4 +56,18 @@ public class BoardScript : MonoBehaviour
         return (currentBlock);
     }
     
+    private void CreateBlock()
+    {
+        GameObject newBlock = Instantiate(block, blockStartPos, Quaternion.identity);
+        newBlock.transform.SetParent(transform);
+        newBlock.GetComponent<BlockScript>().SetAllBlocks(blockList);
+        newBlock.GetComponent<BlockScript>().SetBoardScript(this);
+        currentBlock = newBlock;
+        blockList.Add(newBlock);
+    }
+
+    public void RemoveBlock(GameObject b)
+    {
+        blockList.Remove(b);
+    }
 }
