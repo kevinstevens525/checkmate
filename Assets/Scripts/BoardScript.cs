@@ -65,6 +65,7 @@ public class BoardScript : MonoBehaviour
         newBlock.GetComponent<BlockScript>().SetBoardScript(this);
         currentBlock = newBlock;
         blockList.Add(newBlock);
+        newBlock.GetComponent<BlockScript>().SpawnSecondary(block);
     }
 
     public void RemoveBlock(GameObject b)

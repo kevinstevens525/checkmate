@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BlockScript : MonoBehaviour
 {
-    float speed = 6f;
+    float speed = 4f;
 
     Rigidbody rb;
     Renderer rend;
@@ -30,6 +30,13 @@ public class BlockScript : MonoBehaviour
     public Sprite rookSprite;
     public Sprite queenSprite;
     public Sprite kingSprite;
+
+    bool isSecondary = false;
+
+    GameObject secondaryBlock;
+    GameObject primaryBlock;
+
+    Vector3 secondaryPosition = new Vector3(1, 0, 0);
 
 	// Use this for initialization
 	void Start ()
@@ -88,9 +95,14 @@ public class BlockScript : MonoBehaviour
         {
             GetAdjacent();
 
-            if (parentBS.GetCurrentBlock() == this.gameObject)
+            if (parentBS.GetCurrentBlock() == this.gameObject || (primaryBlock != null && parentBS.GetCurrentBlock() == primaryBlock))
             {
-                Controls();
+                
+                if (secondaryBlock != null)
+                {
+                    Controls();
+                    secondaryBlock.transform.localPosition = transform.localPosition + secondaryPosition;
+                }
             }
             else
             {
@@ -105,7 +117,7 @@ public class BlockScript : MonoBehaviour
             ActuallyDestroy();
         }
 
-        if (transform.position.y < -10)
+        if (transform.localPosition.y < -10)
         {
             Destroy(gameObject);
         }
@@ -118,35 +130,94 @@ public class BlockScript : MonoBehaviour
 
         foreach (GameObject b in adjacentDiagonals)
         {
-            if (b.transform.position.x < transform.position.x - .1f)
+            if ((secondaryBlock != null && b != secondaryBlock))
             {
-                canGoLeft = false;
-            }
+                if (b.transform.localPosition.x < transform.localPosition.x - .1f)
+                {
+                    canGoLeft = false;
+                }
 
-            if (b.transform.position.x > transform.position.x + .1f)
-            {
-                canGoRight = false;
+                if (b.transform.localPosition.x > transform.localPosition.x + .1f)
+                {
+                    canGoRight = false;
+                }
             }
         }
 
-        if (transform.localPosition.x < .9f)
+        foreach (GameObject b in secondaryBlock.GetComponent<BlockScript>().GetAdjacentList())
+        {
+            if ((b != gameObject))
+            {
+                if (b.transform.localPosition.x < secondaryBlock.transform.localPosition.x - .1f)
+                {
+                    canGoLeft = false;
+                }
+
+                if (b.transform.localPosition.x > secondaryBlock.transform.localPosition.x + .1f)
+                {
+                    canGoRight = false;
+                }
+            }
+        }
+
+        if (transform.localPosition.x < .9f || secondaryBlock.transform.localPosition.x < .9f)
         {
             canGoLeft = false;
         }
 
-        if (transform.localPosition.x > 6.1f)
+        if (transform.localPosition.x > 6.1f || secondaryBlock.transform.localPosition.x > 6.1f)
         {
             canGoRight = false;
         }
 
         if (Input.GetButtonDown("Left") && canGoLeft)
         {
-            transform.position -= transform.right;
+            transform.localPosition -= transform.right;
         }
 
         if (Input.GetButtonDown("Right") && canGoRight)
         {
-            transform.position += transform.right;
+            transform.localPosition += transform.right;
+        }
+
+        if (Input.GetButtonDown("RotateLeft"))
+        {
+            if (secondaryPosition.x == 1)
+            {
+                secondaryPosition = new Vector3(0, 1, 0);
+            }
+            else if (secondaryPosition.y == 1)
+            {
+                secondaryPosition = new Vector3(-1, 0, 0);
+            }
+            else if (secondaryPosition.x == -1)
+            {
+                secondaryPosition = new Vector3(0, -1, 0);
+            }
+            else if (secondaryPosition.y == -1)
+            {
+                secondaryPosition = new Vector3(1, 0, 0);
+            }
+        }
+
+        if (Input.GetButtonDown("RotateRight"))
+        {
+            if (secondaryPosition.x == -1)
+            {
+                secondaryPosition = new Vector3(0, 1, 0);
+            }
+            else if (secondaryPosition.y == -1)
+            {
+                secondaryPosition = new Vector3(-1, 0, 0);
+            }
+            else if (secondaryPosition.x == 1)
+            {
+                secondaryPosition = new Vector3(0, -1, 0);
+            }
+            else if (secondaryPosition.y == 1)
+            {
+                secondaryPosition = new Vector3(1, 0, 0);
+            }
         }
     }
 
@@ -177,7 +248,8 @@ public class BlockScript : MonoBehaviour
             if (b != null)
             {
                 if (b.GetComponent<BlockScript>().GetPiece() == piece
-                    && b.GetComponent<Rigidbody>().velocity.magnitude < .05f)
+                    && (b.GetComponent<Rigidbody>().velocity.magnitude < .05f 
+                    || (secondaryBlock != null && b == secondaryBlock) || (primaryBlock != null && b == primaryBlock)))
                 {
                     adjacentMatching.Add(b);
                 }
@@ -190,13 +262,31 @@ public class BlockScript : MonoBehaviour
         }
     }
 
+    public List<GameObject> GetAdjacentList()
+    {
+        return adjacentDiagonals;
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (!setToDestroy && collision.gameObject.tag == gameObject.tag)
+        if ((secondaryBlock != null && collision.gameObject != secondaryBlock) || (primaryBlock != null && collision.gameObject != primaryBlock))
         {
-            rb.velocity = Vector3.zero;
-            rb.constraints = RigidbodyConstraints.FreezeAll;
+            if (!setToDestroy && collision.gameObject.tag == gameObject.tag)
+            {
+                StopFalling();
+
+                if (primaryBlock != null)
+                {
+                    primaryBlock.GetComponent<BlockScript>().StopFalling();
+                }
+            }
         }
+    }
+
+    public void StopFalling()
+    {
+        rb.velocity = Vector3.zero;
+        rb.constraints = RigidbodyConstraints.FreezeAll;
     }
 
     public void SetAllBlocks(List<GameObject> newBlockList)
@@ -294,5 +384,26 @@ public class BlockScript : MonoBehaviour
 
             rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
         }
+    }
+
+    public void SetSecondary()
+    {
+        isSecondary = true;
+    }
+
+    public void SetPrimaryBlock(GameObject newPrimaryBlock)
+    {
+        primaryBlock = newPrimaryBlock;
+    }
+
+    public void SpawnSecondary(GameObject block)
+    {
+        GameObject newBlock = Instantiate(block, transform.position + transform.right, Quaternion.identity);
+        newBlock.transform.SetParent(transform.parent);
+        newBlock.GetComponent<BlockScript>().SetAllBlocks(allBlocks);
+        newBlock.GetComponent<BlockScript>().SetBoardScript(parentBS);
+        secondaryBlock = newBlock;
+        allBlocks.Add(newBlock);
+        newBlock.GetComponent<BlockScript>().SetPrimaryBlock(gameObject);
     }
 }
