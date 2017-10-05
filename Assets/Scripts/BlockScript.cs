@@ -12,6 +12,9 @@ public class BlockScript : MonoBehaviour
 
     string piece = "pawn";
 
+    List<int> pieceProbabilities = new List<int>();
+    List<string> pieceNames = new List<string>();
+
     bool playerColor = true;
 
     List<GameObject> adjacentMatching = new List<GameObject>(); // Adjacent blocks of the same piece
@@ -19,6 +22,8 @@ public class BlockScript : MonoBehaviour
     List<GameObject> adjacentDiagonals = new List<GameObject>(); // All adjacent blocks AND all diagonals
 
     List<GameObject> allBlocks = new List<GameObject>(); // All blocks on the board
+
+    List<GameObject> highlightBoxList = new List<GameObject>();
 
     bool setToDestroy = false;
 
@@ -38,6 +43,10 @@ public class BlockScript : MonoBehaviour
 
     Vector3 secondaryPosition = new Vector3(1, 0, 0);
 
+    public GameObject highlightCirclePrefab;
+    GameObject childHighlightCircle;
+    List<GameObject> childHighlightCirclesList = new List<GameObject>();
+
 	// Use this for initialization
 	void Start ()
     {
@@ -49,34 +58,47 @@ public class BlockScript : MonoBehaviour
 
         pieceRend = GetComponentInChildren<SpriteRenderer>();
 
-        int pieceRandom = Random.Range(1, 6);
+        pieceProbabilities.Add(10);
+        pieceProbabilities.Add(9);
+        pieceProbabilities.Add(9);
+        pieceProbabilities.Add(8);
+        pieceProbabilities.Add(7);
+        pieceProbabilities.Add(0);
 
-        // pieceRandom = 1;
+        pieceNames.Add("pawn");
+        pieceNames.Add("knight");
+        pieceNames.Add("bishop");
+        pieceNames.Add("rook");
+        pieceNames.Add("queen");
+        pieceNames.Add("king");
 
-        if (pieceRandom == 1)
+        int pieceProbMax = 0;
+        int pieceProbCurrent = 0;
+
+        foreach (int i in pieceProbabilities)
         {
-            piece = "pawn";
+            pieceProbMax += i;
         }
-        else if (pieceRandom == 2)
+
+        int pieceProbRandom = Random.Range(1, pieceProbMax + 1);
+
+        // pieceProbRandom = pieceProbMax - 1; // ------- FORCE PIECE -------
+
+        for (int i = 0; i < pieceNames.Count; i++)
         {
-            piece = "knight";
+            if (pieceProbRandom > pieceProbCurrent)
+            {
+                piece = pieceNames[i];
+            }
+
+            pieceProbCurrent += pieceProbabilities[i];
         }
-        else if (pieceRandom == 3)
-        {
-            piece = "bishop";
-        }
-        else if (pieceRandom == 4)
-        {
-            piece = "rook";
-        }
-        else if (pieceRandom == 5)
-        {
-            piece = "queen";
-        }
+
+        
 
         SetSpriteAndColor();
 
-        playerColor = false;
+        // playerColor = false;
 
         if (playerColor)
         {
@@ -86,14 +108,17 @@ public class BlockScript : MonoBehaviour
         {
             pieceRend.color = Color.black;
         }
+
+        
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
+        GetAdjacent(false);
+
         if (!setToDestroy)
         {
-            GetAdjacent();
 
             if (parentBS.GetCurrentBlock() == this.gameObject || (primaryBlock != null && parentBS.GetCurrentBlock() == primaryBlock))
             {
@@ -111,9 +136,20 @@ public class BlockScript : MonoBehaviour
                 newPos.y = Mathf.Round(newPos.y);
                 transform.localPosition = newPos;
             }
+
+            if (childHighlightCirclesList.Count == 0 && parentBS != null)
+            {
+                MakeHighlightCircles();
+            }
+
+            foreach (GameObject g in childHighlightCirclesList)
+            {
+                g.SendMessage("TurnOnHighlight", SendMessageOptions.DontRequireReceiver);
+            }
         }
         else if (GetComponent<Collider>().enabled)
         {
+            
             ActuallyDestroy();
         }
 
@@ -121,6 +157,8 @@ public class BlockScript : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        
     }
 
     void Controls()
@@ -186,7 +224,7 @@ public class BlockScript : MonoBehaviour
             {
                 secondaryPosition = new Vector3(0, 1, 0);
             }
-            else if (secondaryPosition.y == 1)
+            else if (secondaryPosition.y == 1 && canGoLeft)
             {
                 secondaryPosition = new Vector3(-1, 0, 0);
             }
@@ -194,7 +232,7 @@ public class BlockScript : MonoBehaviour
             {
                 secondaryPosition = new Vector3(0, -1, 0);
             }
-            else if (secondaryPosition.y == -1)
+            else if (secondaryPosition.y == -1 && canGoRight)
             {
                 secondaryPosition = new Vector3(1, 0, 0);
             }
@@ -206,7 +244,7 @@ public class BlockScript : MonoBehaviour
             {
                 secondaryPosition = new Vector3(0, 1, 0);
             }
-            else if (secondaryPosition.y == -1)
+            else if (secondaryPosition.y == -1 && canGoLeft)
             {
                 secondaryPosition = new Vector3(-1, 0, 0);
             }
@@ -214,14 +252,14 @@ public class BlockScript : MonoBehaviour
             {
                 secondaryPosition = new Vector3(0, -1, 0);
             }
-            else if (secondaryPosition.y == 1)
+            else if (secondaryPosition.y == 1 && canGoRight)
             {
                 secondaryPosition = new Vector3(1, 0, 0);
             }
         }
     }
 
-    void GetAdjacent()
+    public void GetAdjacent(bool checkDestroy)
     {
         adjacentMatching.Clear();
         adjacentBlocks.Clear();
@@ -248,15 +286,14 @@ public class BlockScript : MonoBehaviour
             if (b != null)
             {
                 if (b.GetComponent<BlockScript>().GetPiece() == piece
-                    && (b.GetComponent<Rigidbody>().velocity.magnitude < .05f 
-                    || (secondaryBlock != null && b == secondaryBlock) || (primaryBlock != null && b == primaryBlock)))
+                    && b.GetComponent<Rigidbody>().velocity.magnitude < .1f)
                 {
                     adjacentMatching.Add(b);
                 }
             }
         }
 
-        if (adjacentMatching.Count >= 3)
+        if (checkDestroy && adjacentMatching.Count >= 3)
         {
             DestroyObject();
         }
@@ -279,6 +316,11 @@ public class BlockScript : MonoBehaviour
                 {
                     primaryBlock.GetComponent<BlockScript>().StopFalling();
                 }
+
+                if (secondaryBlock != null)
+                {
+                    secondaryBlock.GetComponent<BlockScript>().StopFalling();
+                }
             }
         }
     }
@@ -294,6 +336,11 @@ public class BlockScript : MonoBehaviour
         allBlocks = newBlockList;
     }
 
+    public void SetHighlightBoxList(List<GameObject> newBoxList)
+    {
+        highlightBoxList = newBoxList;
+    }
+
     public void SetBoardScript(BoardScript bs)
     {
         parentBS = bs;
@@ -302,6 +349,11 @@ public class BlockScript : MonoBehaviour
     public string GetPiece()
     {
         return piece;
+    }
+
+    public GameObject GetSecondary()
+    {
+        return secondaryBlock;
     }
 
     public void RemoveFromAdjacentMatching(GameObject g)
@@ -336,7 +388,7 @@ public class BlockScript : MonoBehaviour
         
         rb.constraints = RigidbodyConstraints.None;
         rb.useGravity = true;
-        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -25);
+        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -150);
 
         rb.AddTorque(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
 
@@ -405,5 +457,128 @@ public class BlockScript : MonoBehaviour
         secondaryBlock = newBlock;
         allBlocks.Add(newBlock);
         newBlock.GetComponent<BlockScript>().SetPrimaryBlock(gameObject);
+    }
+
+    private void MakeHighlightCircles()
+    {
+        /*
+        childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+        childHighlightCircle.GetComponent<HighlightCircleScript>().MakeNextCircle(5, 1, 1, transform.parent, gameObject);
+        */
+
+        if (piece == "pawn")
+        {
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, 1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, -1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+        }
+        else if (piece == "bishop")
+        {
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+        }
+        else if (piece == "rook")
+        {
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, 0, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, 0, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(15, 0, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(15, 0, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+        }
+        else if (piece == "knight")
+        {
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, 1, 2, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, 2, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, 2, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, 1, -2, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, -1, 2, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, -2, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, -2, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(0, -1, -2, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+        }
+        else if (piece == "queen")
+        {
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, 0, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, 0, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(15, 0, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(15, 0, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, 1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, -1, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+
+            childHighlightCircle = Instantiate(highlightCirclePrefab, transform.position, Quaternion.identity);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(7, 1, -1, transform.parent, gameObject, parentBS);
+            childHighlightCirclesList.Add(childHighlightCircle);
+        }
     }
 }

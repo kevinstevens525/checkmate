@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44949442, g: 0.49649101, b: 0.55914664, a: 1}
+  m_IndirectSpecularColor: {r: 0.44949412, g: 0.49649048, b: 0.5591459, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -219,6 +219,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardCube: {fileID: 1408014642514722, guid: e49a08ce3f77b7d4d9838a692ec2cc56, type: 2}
   block: {fileID: 1404588247417412, guid: c634fec4dd3f18c4a9e9426e4682b4b8, type: 2}
+  highlightBox: {fileID: 1003853118334474, guid: 577bd547c35385e45848679c76da316d,
+    type: 2}
 --- !u!4 &1109680972
 Transform:
   m_ObjectHideFlags: 0
@@ -357,7 +359,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 30
+  field of view: 7
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -382,7 +384,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1541559684}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.5, y: 7.5, z: -40}
+  m_LocalPosition: {x: 3.5, y: 7.5, z: -150}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

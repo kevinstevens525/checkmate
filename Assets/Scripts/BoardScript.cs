@@ -10,8 +10,14 @@ public class BoardScript : MonoBehaviour
 
     public GameObject block;
 
+    public GameObject highlightBox;
+
     GameObject currentBlock;
     List<GameObject> blockList = new List<GameObject>();
+
+    List<GameObject> highlightList = new List<GameObject>();
+
+    List<GameObject> highlightBoxList = new List<GameObject>();
 
     Vector3 blockStartPos = new Vector3(3, 16, 0);
 
@@ -28,10 +34,15 @@ public class BoardScript : MonoBehaviour
             newBoardCube.transform.SetParent(transform);
             boardCubeList.Add(newBoardCube);
 
+            GameObject newHighlightCube = Instantiate(highlightBox, transform.position + newPos - Vector3.forward, Quaternion.identity);
+            newHighlightCube.transform.SetParent(transform);
+            newHighlightCube.name = "HighlightCube" + i;
+            highlightBoxList.Add(newHighlightCube);
+
             Material newBlockMat = newBoardCube.GetComponent<Renderer>().material;
             if (yPos % 2 == xPos % 2)
             {
-                newBlockMat.SetColor("_Color", Color.black);
+                newBlockMat.SetColor("_Color", new Color(.2f, .2f, .2f));
             }
         }
 	}
@@ -50,6 +61,14 @@ public class BoardScript : MonoBehaviour
         {
             CreateBlock();
         }
+
+        foreach(GameObject h in highlightBoxList)
+        {
+            // h.GetComponent<Renderer>().enabled = false;
+
+            
+        }
+        
 	}
 
     public GameObject GetCurrentBlock()
@@ -62,14 +81,51 @@ public class BoardScript : MonoBehaviour
         GameObject newBlock = Instantiate(block, blockStartPos, Quaternion.identity);
         newBlock.transform.SetParent(transform);
         newBlock.GetComponent<BlockScript>().SetAllBlocks(blockList);
+        // newBlock.GetComponent<BlockScript>().SetHighlightBoxList(highlightBoxList);
         newBlock.GetComponent<BlockScript>().SetBoardScript(this);
         currentBlock = newBlock;
         blockList.Add(newBlock);
         newBlock.GetComponent<BlockScript>().SpawnSecondary(block);
+
+        foreach (GameObject b in blockList)
+        {
+            b.GetComponent<BlockScript>().GetAdjacent(true);
+        }
     }
 
     public void RemoveBlock(GameObject b)
     {
         blockList.Remove(b);
+    }
+
+    public void AddHighlight(GameObject h)
+    {
+        if (!highlightList.Contains(h))
+        {
+            highlightList.Add(h);
+        }
+    }
+
+    public void RemoveHighlight(GameObject h)
+    {
+        if (highlightList.Contains(h))
+        {
+            highlightList.Remove(h);
+        }
+    }
+
+    public List<GameObject> GetHighlightList()
+    {
+        return highlightList;
+    }
+
+    public List<GameObject> GetHighlightBoxList()
+    {
+        return highlightBoxList;
+    }
+
+    public List<GameObject> GetBlockList()
+    {
+        return blockList;
     }
 }
