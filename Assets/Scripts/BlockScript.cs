@@ -10,7 +10,7 @@ public class BlockScript : MonoBehaviour
     Renderer rend;
     SpriteRenderer pieceRend;
 
-    string piece = "pawn";
+    string piece;
 
     List<int> pieceProbabilities = new List<int>();
     List<string> pieceNames = new List<string>();
@@ -52,62 +52,62 @@ public class BlockScript : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        rb.velocity = -transform.up * speed;
+        if (playerColor)
+        {
+            rb.velocity = -transform.up * speed;
+        }
+        else
+        {
+            StopFalling();
+        }
 
         rend = GetComponent<Renderer>();
 
         pieceRend = GetComponentInChildren<SpriteRenderer>();
 
-        pieceProbabilities.Add(10);
-        pieceProbabilities.Add(9);
-        pieceProbabilities.Add(9);
-        pieceProbabilities.Add(8);
-        pieceProbabilities.Add(7);
-        pieceProbabilities.Add(0);
-
-        pieceNames.Add("pawn");
-        pieceNames.Add("knight");
-        pieceNames.Add("bishop");
-        pieceNames.Add("rook");
-        pieceNames.Add("queen");
-        pieceNames.Add("king");
-
-        int pieceProbMax = 0;
-        int pieceProbCurrent = 0;
-
-        foreach (int i in pieceProbabilities)
+        if (piece == null)
         {
-            pieceProbMax += i;
-        }
+            pieceProbabilities.Add(10);
+            pieceProbabilities.Add(9);
+            pieceProbabilities.Add(7);
+            pieceProbabilities.Add(5);
+            pieceProbabilities.Add(4);
+            pieceProbabilities.Add(0);
 
-        int pieceProbRandom = Random.Range(1, pieceProbMax + 1);
+            pieceNames.Add("pawn");
+            pieceNames.Add("knight");
+            pieceNames.Add("bishop");
+            pieceNames.Add("rook");
+            pieceNames.Add("queen");
+            pieceNames.Add("king");
 
-        // pieceProbRandom = pieceProbMax - 1; // ------- FORCE PIECE -------
+            int pieceProbMax = 0;
+            int pieceProbCurrent = 0;
 
-        for (int i = 0; i < pieceNames.Count; i++)
-        {
-            if (pieceProbRandom > pieceProbCurrent)
+            foreach (int i in pieceProbabilities)
             {
-                piece = pieceNames[i];
+                pieceProbMax += i;
             }
 
-            pieceProbCurrent += pieceProbabilities[i];
-        }
+            int pieceProbRandom = Random.Range(1, pieceProbMax + 1);
 
+            // pieceProbRandom = pieceProbMax - 1; // ------- FORCE PIECE -------
+
+            for (int i = 0; i < pieceNames.Count; i++)
+            {
+                if (pieceProbRandom > pieceProbCurrent)
+                {
+                    piece = pieceNames[i];
+                }
+
+                pieceProbCurrent += pieceProbabilities[i];
+            }
+
+
+
+            SetSpriteAndColor();
+        }
         
-
-        SetSpriteAndColor();
-
-        // playerColor = false;
-
-        if (playerColor)
-        {
-            pieceRend.color = Color.white;
-        }
-        else
-        {
-            pieceRend.color = Color.black;
-        }
 
         
     }
@@ -137,7 +137,7 @@ public class BlockScript : MonoBehaviour
                 transform.localPosition = newPos;
             }
 
-            if (childHighlightCirclesList.Count == 0 && parentBS != null)
+            if (playerColor && childHighlightCirclesList.Count == 0 && parentBS != null)
             {
                 MakeHighlightCircles();
             }
@@ -395,10 +395,28 @@ public class BlockScript : MonoBehaviour
         GetComponent<Collider>().enabled = false;
     }
 
+    public void SetPiece(string newPiece, bool newIsPlayerColor)
+    {
+        playerColor = newIsPlayerColor;
+        piece = newPiece;
+
+        SetSpriteAndColor();
+    }
+
     private void SetSpriteAndColor()
     {
         float highColor = .6f;
         float lowColor = .2f;
+
+        if (pieceRend == null)
+        {
+            pieceRend = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        if (rend == null)
+        {
+            rend = GetComponent<Renderer>();
+        }
 
         if (piece == "pawn")
         {
@@ -435,6 +453,15 @@ public class BlockScript : MonoBehaviour
             pieceRend.sprite = kingSprite;
 
             rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
+        }
+
+        if (playerColor)
+        {
+            pieceRend.color = Color.white;
+        }
+        else
+        {
+            pieceRend.color = Color.black;
         }
     }
 

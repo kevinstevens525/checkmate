@@ -45,6 +45,8 @@ public class BoardScript : MonoBehaviour
                 newBlockMat.SetColor("_Color", new Color(.2f, .2f, .2f));
             }
         }
+
+        CreateEnemyBlock(4, 4, "king");
 	}
 	
 	// Update is called once per frame
@@ -80,12 +82,30 @@ public class BoardScript : MonoBehaviour
     {
         GameObject newBlock = Instantiate(block, blockStartPos, Quaternion.identity);
         newBlock.transform.SetParent(transform);
+        newBlock.transform.localPosition = newBlock.transform.position;
         newBlock.GetComponent<BlockScript>().SetAllBlocks(blockList);
         // newBlock.GetComponent<BlockScript>().SetHighlightBoxList(highlightBoxList);
         newBlock.GetComponent<BlockScript>().SetBoardScript(this);
         currentBlock = newBlock;
         blockList.Add(newBlock);
         newBlock.GetComponent<BlockScript>().SpawnSecondary(block);
+
+        foreach (GameObject b in blockList)
+        {
+            b.GetComponent<BlockScript>().GetAdjacent(true);
+        }
+    }
+
+    private void CreateEnemyBlock(float newXPos, float newYPos, string newPiece)
+    {
+        GameObject newBlock = Instantiate(block, new Vector3(newXPos, newYPos, 0), Quaternion.identity);
+        newBlock.transform.SetParent(transform);
+        newBlock.transform.localPosition = newBlock.transform.position;
+        newBlock.GetComponent<BlockScript>().SetAllBlocks(blockList);
+        // newBlock.GetComponent<BlockScript>().SetHighlightBoxList(highlightBoxList);
+        newBlock.GetComponent<BlockScript>().SetBoardScript(this);
+        blockList.Add(newBlock);
+        newBlock.GetComponent<BlockScript>().SetPiece(newPiece, false);
 
         foreach (GameObject b in blockList)
         {
