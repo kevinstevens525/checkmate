@@ -10,6 +10,8 @@ public class HighlightMarkerScript : MonoBehaviour
 
     GameObject origin;
 
+    GameObject pieceOrigin;
+
     int xDist;
     int yDist;
     float zDist;
@@ -31,15 +33,6 @@ public class HighlightMarkerScript : MonoBehaviour
         {
             transform.localPosition = origin.transform.localPosition + new Vector3(xDist, yDist, zDist);
             
-            /*
-            foreach(GameObject h in boardScr.GetHighlightBoxList())
-            {
-                if ((h.transform.position - transform.position).magnitude < .5f)
-                {
-                    h.SendMessage("TurnOn", SendMessageOptions.DontRequireReceiver);
-                }
-            }
-            */
         }
         else if (boardScr != null)
         {
@@ -49,7 +42,7 @@ public class HighlightMarkerScript : MonoBehaviour
         }
     }
 
-    public void TurnOnHighlight()
+    public void TurnOnHighlight(bool recur)
     {
         if (boardScr != null)
         {
@@ -58,31 +51,49 @@ public class HighlightMarkerScript : MonoBehaviour
                 if ((h.transform.position - transform.position).magnitude < .5f)
                 {
                     h.SendMessage("TurnOn", SendMessageOptions.DontRequireReceiver);
+
+                    if (pieceOrigin == boardScr.GetCurrentBlock() 
+                        || pieceOrigin == boardScr.GetCurrentBlock().GetComponent<BlockScript>().GetSecondary())
+                    {
+                        h.SendMessage("TurnGreen", SendMessageOptions.DontRequireReceiver);
+                    }
                 }
             }
 
-            bool doNext = true;
+            bool doNext = recur;
 
             foreach (GameObject g in boardScr.GetBlockList())
             {
                 if ((g.transform.position - transform.position).magnitude < .5f)
                 {
+                    if (g.GetComponent<BlockScript>().GetPiece() == "king")
+                    {
+                        childHighlightCircle.SendMessage("TurnOnHighlight", false, SendMessageOptions.DontRequireReceiver);
+                    }
+
                     doNext = false;
                 }
             }
 
             if (doNext && childHighlightCircle != null)
             {
-                childHighlightCircle.SendMessage("TurnOnHighlight", SendMessageOptions.DontRequireReceiver);
+                childHighlightCircle.SendMessage("TurnOnHighlight", true, SendMessageOptions.DontRequireReceiver);
             }
         }
     }
 
-    public void MakeNextCircle(int num, int newXDist, int newYDist, Transform newParent, GameObject newOrigin, BoardScript newBoardScr)
+    public void SetPieceOrigin(GameObject newPieceOrigin)
+    {
+        pieceOrigin = newPieceOrigin;
+    }
+
+    public void MakeNextCircle(int num, int newXDist, int newYDist, Transform newParent, GameObject newOrigin, BoardScript newBoardScr, GameObject newPieceOrigin)
     {
         transform.SetParent(newParent);
 
         origin = newOrigin;
+
+        pieceOrigin = newPieceOrigin;
 
         name = "HighlightMarker" + num;
 
@@ -98,9 +109,11 @@ public class HighlightMarkerScript : MonoBehaviour
 
         childHighlightCircle.transform.localPosition = transform.localPosition + new Vector3(xDist, yDist, zDist);
 
+        
+
         if (num > 0)
         {
-            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(num - 1, xDist, yDist, newParent, gameObject, boardScr);
+            childHighlightCircle.GetComponent<HighlightMarkerScript>().MakeNextCircle(num - 1, xDist, yDist, newParent, gameObject, boardScr, newPieceOrigin);
         }
     }
 }
