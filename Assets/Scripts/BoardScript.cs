@@ -42,11 +42,11 @@ public class BoardScript : MonoBehaviour
             Material newBlockMat = newBoardCube.GetComponent<Renderer>().material;
             if (yPos % 2 == xPos % 2)
             {
-                newBlockMat.SetColor("_Color", new Color(.2f, .2f, .2f));
+                newBlockMat.SetColor("_Color", new Color(.5f, .5f, .5f));
             }
         }
 
-        CreateEnemyBlock(4, 4, "king");
+        ResetBoard();
 	}
 	
 	// Update is called once per frame
@@ -64,11 +64,46 @@ public class BoardScript : MonoBehaviour
             CreateBlock();
         }
 
-        foreach(GameObject h in highlightBoxList)
+        for (int i = 0; i < highlightBoxList.Count; i++)
         {
-            // h.GetComponent<Renderer>().enabled = false;
+            HighlightBoxScript hBoxScript = highlightBoxList[i].GetComponent<HighlightBoxScript>();
 
-            
+            if (highlightBoxList[i].GetComponent<Renderer>().enabled)
+            {
+                
+
+                hBoxScript.EnableAllBorders();
+
+                if (i % 8 != 0)
+                {
+                    if (i - 1 >= 0 && highlightBoxList[i - 1].GetComponent<Renderer>().enabled)
+                    {
+                        hBoxScript.DisableBorder(0);
+                    }
+                }
+
+                if (i % 8 != 7)
+                {
+                    if (i + 1 <= highlightBoxList.Count - 1 && highlightBoxList[i + 1].GetComponent<Renderer>().enabled)
+                    {
+                        hBoxScript.DisableBorder(1);
+                    }
+                }
+
+                if (i - 8 >= 0 && highlightBoxList[i - 8].GetComponent<Renderer>().enabled)
+                {
+                    hBoxScript.DisableBorder(3);
+                }
+
+                if (i + 8 <= highlightBoxList.Count - 1 && highlightBoxList[i + 8].GetComponent<Renderer>().enabled)
+                {
+                    hBoxScript.DisableBorder(2);
+                }
+            }
+            else
+            {
+                hBoxScript.DisableAllBorders();
+            }
         }
         
 	}
@@ -110,6 +145,35 @@ public class BoardScript : MonoBehaviour
         foreach (GameObject b in blockList)
         {
             b.GetComponent<BlockScript>().GetAdjacent(true);
+        }
+    }
+
+    private void ResetBoard()
+    {
+        int level = 4;
+
+        for (int i = 0; i < level; i++)
+        {
+            int newKingX = Random.Range(0, 7);
+            int newKingY = Random.Range(0, 9);
+
+            bool goodToGo = false;
+
+            while (!goodToGo)
+            {
+                goodToGo = true;
+
+                foreach (GameObject g in blockList)
+                {
+                    if (Mathf.Abs(g.transform.localPosition.x - newKingX) < .2f
+                        && Mathf.Abs(g.transform.localPosition.y - newKingY) < .2f)
+                    {
+                        goodToGo = false;
+                    }
+                }
+            }
+
+            CreateEnemyBlock(newKingX, newKingY, "king");
         }
     }
 

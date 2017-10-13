@@ -51,11 +51,16 @@ public class HighlightMarkerScript : MonoBehaviour
                 if ((h.transform.position - transform.position).magnitude < .5f)
                 {
                     h.SendMessage("TurnOn", SendMessageOptions.DontRequireReceiver);
+                    
 
                     if (pieceOrigin == boardScr.GetCurrentBlock() 
                         || pieceOrigin == boardScr.GetCurrentBlock().GetComponent<BlockScript>().GetSecondary())
                     {
                         h.SendMessage("TurnGreen", SendMessageOptions.DontRequireReceiver);
+                    }
+                    else
+                    {
+                        h.SendMessage("TurnRed", SendMessageOptions.DontRequireReceiver);
                     }
                 }
             }
@@ -66,7 +71,7 @@ public class HighlightMarkerScript : MonoBehaviour
             {
                 if ((g.transform.position - transform.position).magnitude < .5f)
                 {
-                    if (g.GetComponent<BlockScript>().GetPiece() == "king")
+                    if (g.GetComponent<BlockScript>().GetPiece() == "king" && doNext)
                     {
                         childHighlightCircle.SendMessage("TurnOnHighlight", false, SendMessageOptions.DontRequireReceiver);
                     }

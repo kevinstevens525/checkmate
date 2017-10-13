@@ -53,6 +53,8 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\BlockScript.cs" />
      <Compile Include="Assets\Scripts\BoardScript.cs" />
+     <Compile Include="Assets\Scripts\HighlightBoxScript.cs" />
+     <Compile Include="Assets\Scripts\HighlightMarkerScript.cs" />
      <Compile Include="Assets\Scripts\MainScript.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

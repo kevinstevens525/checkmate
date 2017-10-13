@@ -47,7 +47,10 @@ public class BlockScript : MonoBehaviour
     public GameObject highlightCirclePrefab;
     GameObject childHighlightCircle;
     List<GameObject> childHighlightCirclesList = new List<GameObject>();
-    
+
+    private int checkmateEdgeDetection = 0;
+
+    private int deathTimer = 0;
 
     // Use this for initialization
     void Start ()
@@ -93,7 +96,7 @@ public class BlockScript : MonoBehaviour
 
             int pieceProbRandom = Random.Range(1, pieceProbMax + 1);
 
-            // pieceProbRandom = pieceProbMax - 1; // ------- FORCE PIECE -------
+            
 
             for (int i = 0; i < pieceNames.Count; i++)
             {
@@ -105,12 +108,27 @@ public class BlockScript : MonoBehaviour
                 pieceProbCurrent += pieceProbabilities[i];
             }
 
-
+            // piece = "queen";
 
             SetSpriteAndColor();
         }
         
+        if (piece == "king")
+        {
+            if (transform.localPosition.x < .5f || transform.localPosition.x > 6.5f)
+            {
+                checkmateEdgeDetection = 3;
 
+                if (transform.localPosition.y < .5f)
+                {
+                    checkmateEdgeDetection = 5;
+                }
+            }
+            else if (transform.localPosition.y < .5f)
+            {
+                checkmateEdgeDetection = 3;
+            }
+        }
         
     }
 	
@@ -159,7 +177,15 @@ public class BlockScript : MonoBehaviour
             ActuallyDestroy();
         }
 
-        if (transform.localPosition.y < -10)
+        if (!GetComponent<Collider>().enabled)
+        {
+
+            transform.localScale += Vector3.one * Time.deltaTime * 1.25f;
+
+            deathTimer += 1;
+        }
+
+        if (transform.localPosition.y < -10 || deathTimer >= 200)
         {
             Destroy(gameObject);
         }
@@ -299,10 +325,15 @@ public class BlockScript : MonoBehaviour
             }
         }
 
-        if (checkDestroy && adjacentMatching.Count >= 3)
+        if (piece != "king" && checkDestroy && adjacentMatching.Count >= 3)
         {
             DestroyObject();
         }
+    }
+
+    public void EdgePlus()
+    {
+        checkmateEdgeDetection += 1;
     }
 
     private void CheckCheckmate()
@@ -312,14 +343,14 @@ public class BlockScript : MonoBehaviour
         foreach(GameObject h in parentBS.GetHighlightBoxList())
         {
             if ((h.transform.localPosition - transform.localPosition).magnitude < 1.5f
-                && h.GetComponent<Renderer>().material.GetColor("_Color").a > 0.01f
-                && h.GetComponent<Renderer>().material.GetColor("_Color").g < 0.4f)
+                && h.GetComponent<Renderer>().enabled
+                && h.GetComponent<Renderer>().material.GetColor("_Color").r > h.GetComponent<HighlightBoxScript>().GetTransparencyMax() - .05f)
             {
                 adjacentHighlights.Add(h);
             }
         }
 
-        if (adjacentHighlights.Count >= 9)
+        if (adjacentHighlights.Count + checkmateEdgeDetection >= 9)
         {
             DestroyObject();
         }
@@ -414,7 +445,7 @@ public class BlockScript : MonoBehaviour
         
         rb.constraints = RigidbodyConstraints.None;
         rb.useGravity = true;
-        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -150);
+        rb.velocity = (Vector3.up * 20) + (Vector3.right * Random.Range(-10f, 10f)) + (Vector3.forward * -3);
 
         rb.AddTorque(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
 
@@ -433,6 +464,12 @@ public class BlockScript : MonoBehaviour
     {
         float highColor = .6f;
         float lowColor = .2f;
+
+        if (!playerColor)
+        {
+            highColor = .8f;
+            lowColor = .4f;
+        }
 
         if (pieceRend == null)
         {
