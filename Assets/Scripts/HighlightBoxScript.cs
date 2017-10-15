@@ -9,10 +9,10 @@ public class HighlightBoxScript : MonoBehaviour
     float transparencyMax = .25f;
     float transparencyCurrent = 0f;
 
-    float greenMax = 1;
+    float greenMax = .75f;
     float greenCurrent = 0;
 
-    float redMax = 1;
+    float redMax = .75f;
     float redCurrent = 0;
 
     List<GameObject> piecesCovering = new List<GameObject>();
@@ -73,7 +73,7 @@ public class HighlightBoxScript : MonoBehaviour
 
         foreach (GameObject g in borderList)
         {
-            g.GetComponent<Renderer>().material.color = newColor;
+            //g.GetComponent<Renderer>().material.color = newColor;
         }
     }
 
@@ -95,6 +95,11 @@ public class HighlightBoxScript : MonoBehaviour
     public float GetTransparencyMax()
     {
         return transparencyMax;
+    }
+
+    public float GetRedMax()
+    {
+        return redMax;
     }
 
     public void DisableAllBorders()

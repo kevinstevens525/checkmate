@@ -39,6 +39,16 @@ public class BlockScript : MonoBehaviour
 
     bool isSecondary = false;
 
+    bool canGoLeft = true;
+    bool canGoRight = true;
+    bool canGoUp = true;
+    bool canGoDown = true;
+    bool canRotLeft = true;
+    bool canRotRight = true;
+    bool canFall = true;
+
+    public bool locked = false;
+
     GameObject secondaryBlock;
     GameObject primaryBlock;
 
@@ -51,6 +61,9 @@ public class BlockScript : MonoBehaviour
     private int checkmateEdgeDetection = 0;
 
     private int deathTimer = 0;
+
+    private int collTimer = 0;
+    private int collTimerMax = 15;
 
     // Use this for initialization
     void Start ()
@@ -151,6 +164,11 @@ public class BlockScript : MonoBehaviour
                 {
                     Controls();
                     secondaryBlock.transform.localPosition = transform.localPosition + secondaryPosition;
+
+                    if (canFall)
+                    {
+                        rb.velocity = -transform.up * speed;
+                    }
                 }
             }
             else
@@ -170,6 +188,20 @@ public class BlockScript : MonoBehaviour
             {
                 g.SendMessage("TurnOnHighlight", true, SendMessageOptions.DontRequireReceiver);
             }
+
+            if (rb.velocity.magnitude < .1f)
+            {
+                collTimer++;
+            }
+            else if (collTimer > 0)
+            {
+                collTimer--;
+            }
+
+            if (collTimer >= collTimerMax)
+            {
+                LockPiece();
+            }
         }
         else if (GetComponent<Collider>().enabled)
         {
@@ -180,7 +212,7 @@ public class BlockScript : MonoBehaviour
         if (!GetComponent<Collider>().enabled)
         {
 
-            transform.localScale += Vector3.one * Time.deltaTime * 1.25f;
+            transform.localScale += Vector3.one * Time.deltaTime * .75f;
 
             deathTimer += 1;
         }
@@ -193,51 +225,97 @@ public class BlockScript : MonoBehaviour
         
     }
 
-    void Controls()
+    private void ControlsAdjacent(List<GameObject> l, GameObject g)
     {
-        bool canGoLeft = true;
-        bool canGoRight = true;
-
-        foreach (GameObject b in adjacentDiagonals)
+        foreach (GameObject b in l)
         {
-            if ((secondaryBlock != null && b != secondaryBlock))
+            if (b != gameObject && b != secondaryBlock)
             {
-                if (b.transform.localPosition.x < transform.localPosition.x - .1f)
+                if (b.transform.localPosition.x < g.transform.localPosition.x - .4f
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .8f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .8f)
                 {
                     canGoLeft = false;
+
+                    if (g == gameObject)
+                    {
+                        canRotLeft = false;
+                    }
                 }
 
-                if (b.transform.localPosition.x > transform.localPosition.x + .1f)
+                if (b.transform.localPosition.x > g.transform.localPosition.x + .4f
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .8f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .8f)
                 {
                     canGoRight = false;
+
+                    if (g == gameObject)
+                    {
+                        canRotRight = false;
+                    }
+                }
+
+                if (b.transform.localPosition.y < g.transform.localPosition.y - .4f
+                    && b.transform.localPosition.x > g.transform.localPosition.x - .4f
+                    && b.transform.localPosition.x < g.transform.localPosition.x + .4f)
+                {
+                    canFall = false;
+
+                    if (g == gameObject)
+                    {
+                        canGoDown = false;
+                    }
+                }
+
+                if (g == gameObject
+                    && b.transform.localPosition.y > g.transform.localPosition.y + .4f
+                    && b.transform.localPosition.x > g.transform.localPosition.x - .4f
+                    && b.transform.localPosition.x < g.transform.localPosition.x + .4f)
+                {
+                    canGoUp = false;
                 }
             }
         }
+    }
 
-        foreach (GameObject b in secondaryBlock.GetComponent<BlockScript>().GetAdjacentList())
-        {
-            if ((b != gameObject))
-            {
-                if (b.transform.localPosition.x < secondaryBlock.transform.localPosition.x - .1f)
-                {
-                    canGoLeft = false;
-                }
+    private void Controls()
+    {
+        // ----- TODO: canGoUp and canGoDown for rotation
 
-                if (b.transform.localPosition.x > secondaryBlock.transform.localPosition.x + .1f)
-                {
-                    canGoRight = false;
-                }
-            }
-        }
+        canGoLeft = true;
+        canGoRight = true;
+
+        canGoUp = true;
+        canGoDown = true;
+
+        canRotLeft = true;
+        canRotRight = true;
+
+        ControlsAdjacent(adjacentDiagonals, gameObject);
+        ControlsAdjacent(secondaryBlock.GetComponent<BlockScript>().GetAdjacentList(), secondaryBlock);
+
+        
 
         if (transform.localPosition.x < .9f || secondaryBlock.transform.localPosition.x < .9f)
         {
             canGoLeft = false;
+            canRotLeft = false;
         }
 
         if (transform.localPosition.x > 6.1f || secondaryBlock.transform.localPosition.x > 6.1f)
         {
             canGoRight = false;
+            canRotRight = false;
+        }
+
+        if (transform.localPosition.y < 0f || secondaryBlock.transform.localPosition.y < 0f)
+        {
+            canFall = false;
+        }
+
+        if (transform.localPosition.y < .9f)
+        {
+            canGoDown = false;
         }
 
         if (Input.GetButtonDown("Left") && canGoLeft)
@@ -252,19 +330,19 @@ public class BlockScript : MonoBehaviour
 
         if (Input.GetButtonDown("RotateLeft"))
         {
-            if (secondaryPosition.x == 1)
+            if (secondaryPosition.x == 1 && canGoUp)
             {
                 secondaryPosition = new Vector3(0, 1, 0);
             }
-            else if (secondaryPosition.y == 1 && canGoLeft)
+            else if (secondaryPosition.y == 1 && canRotLeft)
             {
                 secondaryPosition = new Vector3(-1, 0, 0);
             }
-            else if (secondaryPosition.x == -1)
+            else if (secondaryPosition.x == -1 && canGoDown)
             {
                 secondaryPosition = new Vector3(0, -1, 0);
             }
-            else if (secondaryPosition.y == -1 && canGoRight)
+            else if (secondaryPosition.y == -1 && canRotRight)
             {
                 secondaryPosition = new Vector3(1, 0, 0);
             }
@@ -272,19 +350,19 @@ public class BlockScript : MonoBehaviour
 
         if (Input.GetButtonDown("RotateRight"))
         {
-            if (secondaryPosition.x == -1)
+            if (secondaryPosition.x == -1 && canGoUp)
             {
                 secondaryPosition = new Vector3(0, 1, 0);
             }
-            else if (secondaryPosition.y == -1 && canGoLeft)
+            else if (secondaryPosition.y == -1 && canRotLeft)
             {
                 secondaryPosition = new Vector3(-1, 0, 0);
             }
-            else if (secondaryPosition.x == 1)
+            else if (secondaryPosition.x == 1 && canGoDown)
             {
                 secondaryPosition = new Vector3(0, -1, 0);
             }
-            else if (secondaryPosition.y == 1 && canGoRight)
+            else if (secondaryPosition.y == 1 && canRotRight)
             {
                 secondaryPosition = new Vector3(1, 0, 0);
             }
@@ -306,7 +384,7 @@ public class BlockScript : MonoBehaviour
                     adjacentDiagonals.Add(b);
                 }
 
-                if ((b.transform.localPosition - transform.localPosition).magnitude < 1.2f)
+                if ((b.transform.localPosition - transform.localPosition).magnitude < 1.3f)
                 {
                     adjacentBlocks.Add(b);
                 }
@@ -359,12 +437,16 @@ public class BlockScript : MonoBehaviour
     public List<GameObject> GetAdjacentList()
     {
         return adjacentDiagonals;
+        // return adjacentBlocks;
     }
 
+    //private void OnCollisionStay(Collision collision)
     private void OnCollisionEnter(Collision collision)
     {
         if ((secondaryBlock != null && collision.gameObject != secondaryBlock) || (primaryBlock != null && collision.gameObject != primaryBlock))
         {
+            
+
             if (!setToDestroy && collision.gameObject.tag == gameObject.tag)
             {
                 StopFalling();
@@ -385,6 +467,17 @@ public class BlockScript : MonoBehaviour
     public void StopFalling()
     {
         rb.velocity = Vector3.zero;
+        Vector3 newPos = transform.localPosition;
+        newPos.x = Mathf.Round(newPos.x);
+        newPos.y = Mathf.Round(newPos.y);
+        transform.localPosition = newPos;
+
+        // rb.constraints = RigidbodyConstraints.FreezeAll;
+    }
+
+    public void LockPiece()
+    {
+        locked = true;
         rb.constraints = RigidbodyConstraints.FreezeAll;
     }
 

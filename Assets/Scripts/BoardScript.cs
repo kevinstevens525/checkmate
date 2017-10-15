@@ -52,8 +52,9 @@ public class BoardScript : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if (currentBlock != null && 
-            (currentBlock.GetComponent<Rigidbody>().velocity.magnitude < .1f || !currentBlock.GetComponent<Collider>().enabled))
+        if (currentBlock != null &&
+            //(currentBlock.GetComponent<Rigidbody>().velocity.magnitude < .1f || !currentBlock.GetComponent<Collider>().enabled))
+            (currentBlock.GetComponent<BlockScript>().locked || !currentBlock.GetComponent<Collider>().enabled))
         {
 
             currentBlock = null;
@@ -68,7 +69,7 @@ public class BoardScript : MonoBehaviour
         {
             HighlightBoxScript hBoxScript = highlightBoxList[i].GetComponent<HighlightBoxScript>();
 
-            if (highlightBoxList[i].GetComponent<Renderer>().enabled)
+            if (highlightBoxList[i].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
             {
                 
 
@@ -76,7 +77,7 @@ public class BoardScript : MonoBehaviour
 
                 if (i % 8 != 0)
                 {
-                    if (i - 1 >= 0 && highlightBoxList[i - 1].GetComponent<Renderer>().enabled)
+                    if (i - 1 >= 0 && highlightBoxList[i - 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
                     {
                         hBoxScript.DisableBorder(0);
                     }
@@ -84,18 +85,18 @@ public class BoardScript : MonoBehaviour
 
                 if (i % 8 != 7)
                 {
-                    if (i + 1 <= highlightBoxList.Count - 1 && highlightBoxList[i + 1].GetComponent<Renderer>().enabled)
+                    if (i + 1 <= highlightBoxList.Count - 1 && highlightBoxList[i + 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
                     {
                         hBoxScript.DisableBorder(1);
                     }
                 }
 
-                if (i - 8 >= 0 && highlightBoxList[i - 8].GetComponent<Renderer>().enabled)
+                if (i - 8 >= 0 && highlightBoxList[i - 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
                 {
                     hBoxScript.DisableBorder(3);
                 }
 
-                if (i + 8 <= highlightBoxList.Count - 1 && highlightBoxList[i + 8].GetComponent<Renderer>().enabled)
+                if (i + 8 <= highlightBoxList.Count - 1 && highlightBoxList[i + 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
                 {
                     hBoxScript.DisableBorder(2);
                 }
@@ -162,6 +163,9 @@ public class BoardScript : MonoBehaviour
             while (!goodToGo)
             {
                 goodToGo = true;
+
+                newKingX = Random.Range(0, 7);
+                newKingY = Random.Range(0, 9);
 
                 foreach (GameObject g in blockList)
                 {
