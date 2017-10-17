@@ -6,6 +6,9 @@ public class BlockScript : MonoBehaviour
 {
     float speed = 2f;
 
+    private float speedMult = 1;
+    private float speedMultMax = 4;
+
     Rigidbody rb;
     Renderer rend;
     SpriteRenderer pieceRend;
@@ -63,7 +66,9 @@ public class BlockScript : MonoBehaviour
     private int deathTimer = 0;
 
     private int collTimer = 0;
-    private int collTimerMax = 15;
+    private int collTimerMax = 20;
+
+    
 
     // Use this for initialization
     void Start ()
@@ -162,12 +167,14 @@ public class BlockScript : MonoBehaviour
                 
                 if (secondaryBlock != null)
                 {
+                    canFall = true;
+
                     Controls();
                     secondaryBlock.transform.localPosition = transform.localPosition + secondaryPosition;
 
                     if (canFall)
                     {
-                        rb.velocity = -transform.up * speed;
+                        rb.velocity = -transform.up * speed * speedMult;
                     }
                 }
             }
@@ -191,9 +198,10 @@ public class BlockScript : MonoBehaviour
 
             if (rb.velocity.magnitude < .1f)
             {
-                collTimer++;
+                collTimer += 2;
             }
-            else if (collTimer > 0)
+
+            if (collTimer > 0)
             {
                 collTimer--;
             }
@@ -232,8 +240,8 @@ public class BlockScript : MonoBehaviour
             if (b != gameObject && b != secondaryBlock)
             {
                 if (b.transform.localPosition.x < g.transform.localPosition.x - .4f
-                    && b.transform.localPosition.y > g.transform.localPosition.y - .8f
-                    && b.transform.localPosition.y < g.transform.localPosition.y + .8f)
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .9f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .9f)
                 {
                     canGoLeft = false;
 
@@ -244,8 +252,8 @@ public class BlockScript : MonoBehaviour
                 }
 
                 if (b.transform.localPosition.x > g.transform.localPosition.x + .4f
-                    && b.transform.localPosition.y > g.transform.localPosition.y - .8f
-                    && b.transform.localPosition.y < g.transform.localPosition.y + .8f)
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .9f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .9f)
                 {
                     canGoRight = false;
 
@@ -280,7 +288,7 @@ public class BlockScript : MonoBehaviour
 
     private void Controls()
     {
-        // ----- TODO: canGoUp and canGoDown for rotation
+        
 
         canGoLeft = true;
         canGoRight = true;
@@ -291,6 +299,7 @@ public class BlockScript : MonoBehaviour
         canRotLeft = true;
         canRotRight = true;
 
+        
         ControlsAdjacent(adjacentDiagonals, gameObject);
         ControlsAdjacent(secondaryBlock.GetComponent<BlockScript>().GetAdjacentList(), secondaryBlock);
 
@@ -308,7 +317,7 @@ public class BlockScript : MonoBehaviour
             canRotRight = false;
         }
 
-        if (transform.localPosition.y < 0f || secondaryBlock.transform.localPosition.y < 0f)
+        if (transform.localPosition.y < .1f || secondaryBlock.transform.localPosition.y < .1f)
         {
             canFall = false;
         }
@@ -326,6 +335,15 @@ public class BlockScript : MonoBehaviour
         if (Input.GetButtonDown("Right") && canGoRight)
         {
             transform.localPosition += transform.right;
+        }
+
+        if (Input.GetButton("Down"))
+        {
+            speedMult = speedMultMax;
+        }
+        else
+        {
+            speedMult = 1;
         }
 
         if (Input.GetButtonDown("RotateLeft"))
@@ -553,15 +571,20 @@ public class BlockScript : MonoBehaviour
         SetSpriteAndColor();
     }
 
+    public bool GetIsPlayer()
+    {
+        return playerColor;
+    }
+
     private void SetSpriteAndColor()
     {
-        float highColor = .6f;
-        float lowColor = .2f;
+        float highColor = 1f;
+        float lowColor = .4f;
 
         if (!playerColor)
         {
-            highColor = .8f;
-            lowColor = .4f;
+            highColor = .7f;
+            lowColor = .2f;
         }
 
         if (pieceRend == null)
@@ -650,8 +673,8 @@ public class BlockScript : MonoBehaviour
 
         if (piece == "pawn")
         {
-            piecePositions.Add(new Vector3(0, 1, 1));
-            piecePositions.Add(new Vector3(0, -1, 1));
+            piecePositions.Add(new Vector3(0, 1, -1));
+            piecePositions.Add(new Vector3(0, -1, -1));
             
         }
         else if (piece == "bishop")

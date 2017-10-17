@@ -44,7 +44,7 @@ public class HighlightMarkerScript : MonoBehaviour
 
     public void TurnOnHighlight(bool recur)
     {
-        if (boardScr != null)
+        if (boardScr != null && boardScr.GetCurrentBlock() != null)
         {
             foreach (GameObject h in boardScr.GetHighlightBoxList())
             {

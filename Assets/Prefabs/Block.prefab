@@ -87,7 +87,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 0efaad818df18714bbe03f572c2b5df9, type: 2}
+  - {fileID: 2100000, guid: d827eb3a94937184bb8050a2a244054f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -157,6 +157,7 @@ MonoBehaviour:
   rookSprite: {fileID: 21300000, guid: ca1afa52e6fb64547894031f8824a22f, type: 3}
   queenSprite: {fileID: 21300000, guid: d01f23de46ed6104a93d7878f37963dc, type: 3}
   kingSprite: {fileID: 21300000, guid: b1e7e288a91083f48aa1ca8b70d3dcb3, type: 3}
+  locked: 0
   highlightCirclePrefab: {fileID: 1575586945425684, guid: 36e59e212dffe46408540f58462fd116,
     type: 2}
 --- !u!212 &212737365753705866

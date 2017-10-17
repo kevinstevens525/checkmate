@@ -21,8 +21,17 @@ public class BoardScript : MonoBehaviour
 
     Vector3 blockStartPos = new Vector3(3, 16, 0);
 
-	// Use this for initialization
-	void Start ()
+    private List<string> pieceList = new List<string>();
+
+    private int level = 1;
+
+    private bool gameOver = false;
+
+    public Texture lightSquare;
+    public Texture darkSquare;
+
+    // Use this for initialization
+    void Start ()
     {
 		for (int i = 0; i < 128; i++)
         {
@@ -42,9 +51,20 @@ public class BoardScript : MonoBehaviour
             Material newBlockMat = newBoardCube.GetComponent<Renderer>().material;
             if (yPos % 2 == xPos % 2)
             {
-                newBlockMat.SetColor("_Color", new Color(.5f, .5f, .5f));
+                // newBlockMat.SetColor("_Color", new Color(.5f, .5f, .5f));
+                newBlockMat.SetTexture("_MainTex", darkSquare);
+            }
+            else
+            {
+                newBlockMat.SetTexture("_MainTex", lightSquare);
             }
         }
+
+        pieceList.Add("pawn");
+        pieceList.Add("knight");
+        pieceList.Add("bishop");
+        pieceList.Add("rook");
+        pieceList.Add("queen");
 
         ResetBoard();
 	}
@@ -52,61 +72,103 @@ public class BoardScript : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if (currentBlock != null &&
-            //(currentBlock.GetComponent<Rigidbody>().velocity.magnitude < .1f || !currentBlock.GetComponent<Collider>().enabled))
+        if (!gameOver)
+        {
+
+            if (currentBlock != null &&
             (currentBlock.GetComponent<BlockScript>().locked || !currentBlock.GetComponent<Collider>().enabled))
-        {
-
-            currentBlock = null;
-        }
-
-		if (currentBlock == null)
-        {
-            CreateBlock();
-        }
-
-        for (int i = 0; i < highlightBoxList.Count; i++)
-        {
-            HighlightBoxScript hBoxScript = highlightBoxList[i].GetComponent<HighlightBoxScript>();
-
-            if (highlightBoxList[i].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
             {
-                
 
-                hBoxScript.EnableAllBorders();
+                currentBlock = null;
+            }
 
-                if (i % 8 != 0)
+            foreach (GameObject g in blockList)
+            {
+                if (currentBlock != null
+                    && g != currentBlock && g != currentBlock.GetComponent<BlockScript>().GetSecondary()
+                    && g.transform.position.y > blockStartPos.y - 1.5f
+                    && g.transform.position.x > blockStartPos.x - .5f
+                    && g.transform.position.x < blockStartPos.x + 1.5f)
                 {
-                    if (i - 1 >= 0 && highlightBoxList[i - 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
-                    {
-                        hBoxScript.DisableBorder(0);
-                    }
-                }
-
-                if (i % 8 != 7)
-                {
-                    if (i + 1 <= highlightBoxList.Count - 1 && highlightBoxList[i + 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
-                    {
-                        hBoxScript.DisableBorder(1);
-                    }
-                }
-
-                if (i - 8 >= 0 && highlightBoxList[i - 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
-                {
-                    hBoxScript.DisableBorder(3);
-                }
-
-                if (i + 8 <= highlightBoxList.Count - 1 && highlightBoxList[i + 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
-                {
-                    hBoxScript.DisableBorder(2);
+                    gameOver = true;
                 }
             }
-            else
+
+            if (currentBlock == null)
             {
+                CreateBlock();
+            }
+
+            for (int i = 0; i < highlightBoxList.Count; i++)
+            {
+                HighlightBoxScript hBoxScript = highlightBoxList[i].GetComponent<HighlightBoxScript>();
+
+                if (highlightBoxList[i].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
+                {
+
+
+                    hBoxScript.EnableAllBorders();
+
+                    if (i % 8 != 0)
+                    {
+                        if (i - 1 >= 0 && highlightBoxList[i - 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
+                        {
+                            hBoxScript.DisableBorder(0);
+                        }
+                    }
+
+                    if (i % 8 != 7)
+                    {
+                        if (i + 1 <= highlightBoxList.Count - 1 && highlightBoxList[i + 1].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
+                        {
+                            hBoxScript.DisableBorder(1);
+                        }
+                    }
+
+                    if (i - 8 >= 0 && highlightBoxList[i - 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
+                    {
+                        hBoxScript.DisableBorder(3);
+                    }
+
+                    if (i + 8 <= highlightBoxList.Count - 1 && highlightBoxList[i + 8].GetComponent<Renderer>().material.GetColor("_Color").r > .5f)
+                    {
+                        hBoxScript.DisableBorder(2);
+                    }
+                }
+                else
+                {
+                    hBoxScript.DisableAllBorders();
+                }
+            }
+
+            bool stillEnemies = false;
+
+            foreach (GameObject g in blockList)
+            {
+                if (g.GetComponent<BlockScript>().GetPiece() == "king")
+                {
+                    stillEnemies = true;
+                }
+            }
+
+            if (!stillEnemies)
+            {
+                level++;
+
+                ResetBoard();
+            }
+        }
+        else
+        {
+            DestroyAll();
+
+            for (int i = 0; i < highlightBoxList.Count; i++)
+            {
+                HighlightBoxScript hBoxScript = highlightBoxList[i].GetComponent<HighlightBoxScript>();
+
                 hBoxScript.DisableAllBorders();
             }
         }
-        
 	}
 
     public GameObject GetCurrentBlock()
@@ -149,39 +211,56 @@ public class BoardScript : MonoBehaviour
         }
     }
 
-    private void ResetBoard()
+    private void DestroyAll()
     {
-        int level = 4;
-
-        for (int i = 0; i < level; i++)
+        foreach (GameObject g in blockList)
         {
-            int newKingX = Random.Range(0, 7);
-            int newKingY = Random.Range(0, 9);
-
-            bool goodToGo = false;
-
-            while (!goodToGo)
-            {
-                goodToGo = true;
-
-                newKingX = Random.Range(0, 7);
-                newKingY = Random.Range(0, 9);
-
-                foreach (GameObject g in blockList)
-                {
-                    if (Mathf.Abs(g.transform.localPosition.x - newKingX) < .2f
-                        && Mathf.Abs(g.transform.localPosition.y - newKingY) < .2f)
-                    {
-                        goodToGo = false;
-                    }
-                }
-            }
-
-            CreateEnemyBlock(newKingX, newKingY, "king");
+            g.GetComponent<BlockScript>().DestroyObject();
         }
     }
 
-    public void RemoveBlock(GameObject b)
+    private void ResetBoard()
+    {
+        foreach(GameObject g in blockList)
+        {
+            g.GetComponent<BlockScript>().DestroyObject();
+        }
+
+        List<string> randomizeList = new List<string>();
+        
+        for (int i = 0; i < level; i++)
+        {
+            randomizeList.Add("king");
+            randomizeList.Add(pieceList[Random.Range(0, pieceList.Count)]);
+        }
+
+        while (randomizeList.Count < 80)
+        {
+            randomizeList.Add("");
+        }
+
+        for (int i = 0; i < randomizeList.Count; i++)
+        {
+            int newIndex = Random.Range(0, randomizeList.Count - 1);
+
+            string temp = randomizeList[newIndex];
+
+            randomizeList[newIndex] = randomizeList[i];
+
+            randomizeList[i] = temp;
+        }
+
+        for (int i = 0; i < randomizeList.Count; i++)
+        {
+            if (randomizeList[i].Length > 1)
+            {
+                CreateEnemyBlock(i % 8, Mathf.Floor(i / 8), randomizeList[i]);
+            }
+        }
+        
+    }
+
+        public void RemoveBlock(GameObject b)
     {
         blockList.Remove(b);
     }
