@@ -6,7 +6,7 @@ public class HighlightBoxScript : MonoBehaviour
 {
     Material mat;
 
-    float transparencyMax = .25f;
+    float transparencyMax = .18f;
     float transparencyCurrent = 0f;
 
     float greenMax = .75f;

@@ -157,6 +157,8 @@ MonoBehaviour:
   rookSprite: {fileID: 21300000, guid: ca1afa52e6fb64547894031f8824a22f, type: 3}
   queenSprite: {fileID: 21300000, guid: d01f23de46ed6104a93d7878f37963dc, type: 3}
   kingSprite: {fileID: 21300000, guid: b1e7e288a91083f48aa1ca8b70d3dcb3, type: 3}
+  pawnObject: {fileID: 100012, guid: 4428ebc3fb6ed274681b80486ddde800, type: 3}
+  darkTex: {fileID: 2800000, guid: 15ef31f26bc26b346b778eb25d7ecb82, type: 3}
   locked: 0
   highlightCirclePrefab: {fileID: 1575586945425684, guid: 36e59e212dffe46408540f58462fd116,
     type: 2}

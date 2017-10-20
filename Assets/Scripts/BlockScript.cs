@@ -9,6 +9,14 @@ public class BlockScript : MonoBehaviour
     private float speedMult = 1;
     private float speedMultMax = 4;
 
+    private float targetScale = .95f;
+
+    private float leftHoldTimeNext = 0;
+    private float rightHoldTimeNext = 0;
+
+    private float holdTimeTickFirst = .3f;
+    private float holdTimeTick = .1f;
+
     Rigidbody rb;
     Renderer rend;
     SpriteRenderer pieceRend;
@@ -40,6 +48,12 @@ public class BlockScript : MonoBehaviour
     public Sprite queenSprite;
     public Sprite kingSprite;
 
+    public GameObject pawnObject;
+
+    public Texture darkTex;
+
+    GameObject pieceObject;
+
     bool isSecondary = false;
 
     bool canGoLeft = true;
@@ -68,11 +82,13 @@ public class BlockScript : MonoBehaviour
     private int collTimer = 0;
     private int collTimerMax = 20;
 
-    
+    float startTime = -20;
 
     // Use this for initialization
     void Start ()
     {
+        startTime = Time.time;
+
         rb = GetComponent<Rigidbody>();
 
         if (playerColor)
@@ -147,6 +163,10 @@ public class BlockScript : MonoBehaviour
                 checkmateEdgeDetection = 3;
             }
         }
+
+        //rend.enabled = false;
+        //pieceRend.enabled = false;
+
         
     }
 	
@@ -186,7 +206,7 @@ public class BlockScript : MonoBehaviour
                 transform.localPosition = newPos;
             }
 
-            if (playerColor && childHighlightCirclesList.Count == 0 && parentBS != null)
+            if (playerColor && childHighlightCirclesList.Count == 0 && parentBS != null && allBlocks.Contains(gameObject))
             {
                 MakeHighlightCircles();
             }
@@ -224,6 +244,10 @@ public class BlockScript : MonoBehaviour
 
             deathTimer += 1;
         }
+        else if (transform.localScale.x < targetScale)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * targetScale, Time.deltaTime * 5);
+        }
 
         if (transform.localPosition.y < -10 || deathTimer >= 200)
         {
@@ -240,8 +264,8 @@ public class BlockScript : MonoBehaviour
             if (b != gameObject && b != secondaryBlock)
             {
                 if (b.transform.localPosition.x < g.transform.localPosition.x - .4f
-                    && b.transform.localPosition.y > g.transform.localPosition.y - .9f
-                    && b.transform.localPosition.y < g.transform.localPosition.y + .9f)
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .75f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .75f)
                 {
                     canGoLeft = false;
 
@@ -252,8 +276,8 @@ public class BlockScript : MonoBehaviour
                 }
 
                 if (b.transform.localPosition.x > g.transform.localPosition.x + .4f
-                    && b.transform.localPosition.y > g.transform.localPosition.y - .9f
-                    && b.transform.localPosition.y < g.transform.localPosition.y + .9f)
+                    && b.transform.localPosition.y > g.transform.localPosition.y - .75f
+                    && b.transform.localPosition.y < g.transform.localPosition.y + .75f)
                 {
                     canGoRight = false;
 
@@ -327,17 +351,61 @@ public class BlockScript : MonoBehaviour
             canGoDown = false;
         }
 
-        if (Input.GetButtonDown("Left") && canGoLeft)
+        
+        if (parentBS.GetLeftButton() == 2)
         {
-            transform.localPosition -= transform.right;
+            leftHoldTimeNext = Time.time + holdTimeTickFirst;
+
+            if (canGoLeft)
+            {
+                transform.localPosition -= transform.right;
+            }
+        }
+        else if (parentBS.GetLeftButton() == 1)
+        {
+            if (Time.time > leftHoldTimeNext)
+            {
+                if (canGoLeft)
+                {
+                    transform.localPosition -= transform.right;
+                }
+
+                leftHoldTimeNext = Time.time + holdTimeTick;
+            }
+        }
+        else if (parentBS.GetLeftButton() == 0)
+        {
+            leftHoldTimeNext = 0;
         }
 
-        if (Input.GetButtonDown("Right") && canGoRight)
+
+        if (parentBS.GetRightButton() == 2)
         {
-            transform.localPosition += transform.right;
+            rightHoldTimeNext = Time.time + holdTimeTickFirst;
+
+            if (canGoRight)
+            {
+                transform.localPosition += transform.right;
+            }
+        }
+        else if (parentBS.GetRightButton() == 1)
+        {
+            if (Time.time > rightHoldTimeNext)
+            {
+                if (canGoRight)
+                {
+                    transform.localPosition += transform.right;
+                }
+
+                rightHoldTimeNext = Time.time + holdTimeTick;
+            }
+        }
+        else if (parentBS.GetRightButton() == 0)
+        {
+            rightHoldTimeNext = 0;
         }
 
-        if (Input.GetButton("Down"))
+        if (parentBS.GetDownButton() > 0)
         {
             speedMult = speedMultMax;
         }
@@ -531,14 +599,17 @@ public class BlockScript : MonoBehaviour
 
     public void DestroyObject()
     {
-        setToDestroy = true;
-
-        foreach (GameObject b in adjacentMatching)
+        if (startTime > -1 && Time.time > startTime + .25f)
         {
-            BlockScript bScript = b.GetComponent<BlockScript>();
-            if (!bScript.GetSetToDestroy())
+            setToDestroy = true;
+
+            foreach (GameObject b in adjacentMatching)
             {
-                bScript.DestroyObject();
+                BlockScript bScript = b.GetComponent<BlockScript>();
+                if (!bScript.GetSetToDestroy())
+                {
+                    bScript.DestroyObject();
+                }
             }
         }
     }
@@ -578,6 +649,10 @@ public class BlockScript : MonoBehaviour
 
     private void SetSpriteAndColor()
     {
+        GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
+        newPiece.transform.SetParent(transform);
+        pieceObject = newPiece;
+
         float highColor = 1f;
         float lowColor = .4f;
 
@@ -597,51 +672,82 @@ public class BlockScript : MonoBehaviour
             rend = GetComponent<Renderer>();
         }
 
+        Color newColor = Color.white;
+
         if (piece == "pawn")
         {
             pieceRend.sprite = pawnSprite;
 
             rend.material.SetColor("_Color", new Color(highColor, lowColor, lowColor));
+
+            newColor = new Color(highColor, lowColor, lowColor);
         }
         else if (piece == "knight")
         {
             pieceRend.sprite = knightSprite;
 
             rend.material.SetColor("_Color", new Color(highColor, highColor, lowColor));
+
+            newColor = new Color(highColor, highColor, lowColor);
         }
         else if (piece == "bishop")
         {
             pieceRend.sprite = bishopSprite;
 
             rend.material.SetColor("_Color", new Color(lowColor, highColor, lowColor));
+
+            newColor = new Color(lowColor, highColor, lowColor);
         }
         else if (piece == "rook")
         {
             pieceRend.sprite = rookSprite;
 
             rend.material.SetColor("_Color", new Color(lowColor, highColor, highColor));
+
+            newColor = new Color(lowColor, highColor, highColor);
         }
         else if (piece == "queen")
         {
             pieceRend.sprite = queenSprite;
 
             rend.material.SetColor("_Color", new Color(lowColor, lowColor, highColor));
+
+            newColor = new Color(lowColor, lowColor, highColor);
         }
         else if (piece == "king")
         {
             pieceRend.sprite = kingSprite;
 
             rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
+
+            newColor = new Color(highColor, lowColor, highColor);
         }
+
+        foreach(Renderer r in pieceObject.GetComponentsInChildren<Renderer>())
+        {
+            r.material.SetColor("_Color", newColor);
+        }
+
+        //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", Color.white);
 
         if (playerColor)
         {
             pieceRend.color = Color.white;
+
+            newColor = Color.white;
         }
         else
         {
             pieceRend.color = Color.black;
+
+            newColor = new Color(.5f, .5f, .5f);
+
+            pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetTexture("_MainTex", darkTex);
         }
+
+        pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", newColor);
+
+        pieceObject.transform.position = Vector3.one * 500;
     }
 
     public void SetSecondary()
