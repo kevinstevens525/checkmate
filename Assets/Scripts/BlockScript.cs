@@ -649,9 +649,9 @@ public class BlockScript : MonoBehaviour
 
     private void SetSpriteAndColor()
     {
-        GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
-        newPiece.transform.SetParent(transform);
-        pieceObject = newPiece;
+        //GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
+        //newPiece.transform.SetParent(transform);
+        //pieceObject = newPiece;
 
         float highColor = 1f;
         float lowColor = .4f;
@@ -722,12 +722,12 @@ public class BlockScript : MonoBehaviour
 
             newColor = new Color(highColor, lowColor, highColor);
         }
-
+        /*
         foreach(Renderer r in pieceObject.GetComponentsInChildren<Renderer>())
         {
             r.material.SetColor("_Color", newColor);
         }
-
+        */
         //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", Color.white);
 
         if (playerColor)
@@ -742,12 +742,12 @@ public class BlockScript : MonoBehaviour
 
             newColor = new Color(.5f, .5f, .5f);
 
-            pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetTexture("_MainTex", darkTex);
+            //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetTexture("_MainTex", darkTex);
         }
 
-        pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", newColor);
+        //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", newColor);
 
-        pieceObject.transform.position = Vector3.one * 500;
+        //pieceObject.transform.position = Vector3.one * 500;
     }
 
     public void SetSecondary()

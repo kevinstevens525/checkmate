@@ -45,14 +45,25 @@ public class BoardScript : MonoBehaviour
     private List<int> pieceProbabilities = new List<int>();
     private List<string> pieceNames = new List<string>();
 
+    private List<string> nextPieces = new List<string>();
+
     // Use this for initialization
     void Start ()
     {
+        /*
         pieceProbabilities.Add(10);
         pieceProbabilities.Add(9);
         pieceProbabilities.Add(7);
         pieceProbabilities.Add(5);
         pieceProbabilities.Add(4);
+        pieceProbabilities.Add(0);
+        */
+
+        pieceProbabilities.Add(3);
+        pieceProbabilities.Add(3);
+        pieceProbabilities.Add(2);
+        pieceProbabilities.Add(1);
+        pieceProbabilities.Add(1);
         pieceProbabilities.Add(0);
 
         pieceNames.Add("pawn");
@@ -105,11 +116,13 @@ public class BoardScript : MonoBehaviour
         pieceList.Add("rook");
         pieceList.Add("queen");
 
-        RandomizeNextPiece();
+        //RandomizeNextPiece();
 
         CreateNextBlock();
 
         ResetBoard();
+
+        RandomizeNextPiecesList();
 	}
 	
 	// Update is called once per frame
@@ -237,8 +250,19 @@ public class BoardScript : MonoBehaviour
         blockList.Add(newBlock);
         newBlock.GetComponent<BlockScript>().SpawnSecondary(block);
 
-        newBlock.GetComponent<BlockScript>().SetPiece(newPiecePieces[0], true);
-        newBlock.GetComponent<BlockScript>().GetSecondary().GetComponent<BlockScript>().SetPiece(newPiecePieces[1], true);
+        newBlock.GetComponent<BlockScript>().SetPiece(nextPieces[0], true);
+        nextPieces.RemoveAt(0);
+        if (nextPieces.Count < 1)
+        {
+            RandomizeNextPiecesList();
+        }
+
+        newBlock.GetComponent<BlockScript>().GetSecondary().GetComponent<BlockScript>().SetPiece(nextPieces[0], true);
+        nextPieces.RemoveAt(0);
+        if (nextPieces.Count < 2)
+        {
+            RandomizeNextPiecesList();
+        }
 
 
         foreach (GameObject b in blockList)
@@ -246,10 +270,37 @@ public class BoardScript : MonoBehaviour
             b.GetComponent<BlockScript>().GetAdjacent(true);
         }
 
-        RandomizeNextPiece();
+        //RandomizeNextPiece();
 
-        nextPieceDisplay.GetComponent<BlockScript>().SetPiece(newPiecePieces[0], true);
-        nextPieceDisplayChild.GetComponent<BlockScript>().SetPiece(newPiecePieces[1], true);
+        nextPieceDisplay.GetComponent<BlockScript>().SetPiece(nextPieces[0], true);
+        nextPieceDisplayChild.GetComponent<BlockScript>().SetPiece(nextPieces[1], true);
+    }
+
+    private void RandomizeNextPiecesList()
+    {
+        for (int i = 0; i < pieceProbabilities.Count; i ++)
+        {
+            for (int p = 0; p < pieceProbabilities[i]; p++)
+            {
+                nextPieces.Add(pieceNames[i]);
+            }
+        }
+
+        for (int i = 0; i < nextPieces.Count; i++)
+        {
+            int rand = Random.Range(0, nextPieces.Count);
+
+            string temp = nextPieces[rand];
+            nextPieces[rand] = nextPieces[i];
+            nextPieces[i] = temp;
+        }
+
+        /*
+        for (int i = 0; i < nextPieces.Count; i++)
+        {
+            print(nextPieces[i]);
+        }
+        */
     }
 
     private void RandomizeNextPiece()
