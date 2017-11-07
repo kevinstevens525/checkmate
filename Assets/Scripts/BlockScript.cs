@@ -142,7 +142,7 @@ public class BlockScript : MonoBehaviour
                 pieceProbCurrent += pieceProbabilities[i];
             }
 
-            // piece = "queen";
+            piece = "pawn";
 
             SetSpriteAndColor();
         }
@@ -240,7 +240,7 @@ public class BlockScript : MonoBehaviour
         if (!GetComponent<Collider>().enabled)
         {
 
-            transform.localScale += Vector3.one * Time.deltaTime * .75f;
+            transform.localScale += Vector3.one * Time.deltaTime * 1.1f;
 
             deathTimer += 1;
         }
@@ -649,9 +649,13 @@ public class BlockScript : MonoBehaviour
 
     private void SetSpriteAndColor()
     {
-        //GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
-        //newPiece.transform.SetParent(transform);
-        //pieceObject = newPiece;
+        GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
+        newPiece.transform.SetParent(transform);
+        pieceObject = newPiece;
+        //newPiece.transform.localRotation = Quaternion.Euler(90, 0, 0);
+        //newPiece.transform.localPosition = new Vector3(0, -.4f, 0);
+
+        
 
         float highColor = 1f;
         float lowColor = .4f;
@@ -672,7 +676,15 @@ public class BlockScript : MonoBehaviour
             rend = GetComponent<Renderer>();
         }
 
+        pieceRend.enabled = false;
+        rend.enabled = false;
+
         Color newColor = Color.white;
+
+        if (playerColor)
+        {
+            piece = "pawn";
+        }
 
         if (piece == "pawn")
         {
