@@ -157,7 +157,17 @@ MonoBehaviour:
   rookSprite: {fileID: 21300000, guid: ca1afa52e6fb64547894031f8824a22f, type: 3}
   queenSprite: {fileID: 21300000, guid: d01f23de46ed6104a93d7878f37963dc, type: 3}
   kingSprite: {fileID: 21300000, guid: b1e7e288a91083f48aa1ca8b70d3dcb3, type: 3}
-  pawnObject: {fileID: 1375939968225084, guid: a033a29080bb4d3419087ed9d53be622, type: 2}
+  frameObject: {fileID: 1519242861695282, guid: 3ab3333b2474b85459f6f315c9c2e25c,
+    type: 2}
+  pawnObject: {fileID: 1852972800964726, guid: bf6e78ef43cd7db49adbf903a74afc00, type: 2}
+  knightObject: {fileID: 1968314292117030, guid: 09b508e9339f4f246ae5f8d80570fc0b,
+    type: 2}
+  bishopObject: {fileID: 1180673013071236, guid: 4a075a0493aa0034fb75e30ccf048648,
+    type: 2}
+  rookObject: {fileID: 1474407331944586, guid: 20591c9d623093444b5b102d7f0e0458, type: 2}
+  queenObject: {fileID: 1060273388268278, guid: 43c9e1c536ec54b4385b9a01c3228ebe,
+    type: 2}
+  kingObject: {fileID: 1091450315032816, guid: 764121c9d914e1347a3b702d7ce9584e, type: 2}
   darkTex: {fileID: 2800000, guid: 15ef31f26bc26b346b778eb25d7ecb82, type: 3}
   locked: 0
   highlightCirclePrefab: {fileID: 1575586945425684, guid: 36e59e212dffe46408540f58462fd116,

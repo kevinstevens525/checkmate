@@ -48,11 +48,19 @@ public class BlockScript : MonoBehaviour
     public Sprite queenSprite;
     public Sprite kingSprite;
 
+    public GameObject frameObject;
+
     public GameObject pawnObject;
+    public GameObject knightObject;
+    public GameObject bishopObject;
+    public GameObject rookObject;
+    public GameObject queenObject;
+    public GameObject kingObject;
 
     public Texture darkTex;
 
     GameObject pieceObject;
+    GameObject frameObjectCurrent;
 
     bool isSecondary = false;
 
@@ -100,7 +108,7 @@ public class BlockScript : MonoBehaviour
             StopFalling();
         }
 
-        rend = GetComponent<Renderer>();
+        //rend = GetComponent<Renderer>();
 
         pieceRend = GetComponentInChildren<SpriteRenderer>();
 
@@ -649,11 +657,14 @@ public class BlockScript : MonoBehaviour
 
     private void SetSpriteAndColor()
     {
-        GameObject newPiece = Instantiate(pawnObject, transform.position, Quaternion.identity);
-        newPiece.transform.SetParent(transform);
-        pieceObject = newPiece;
-        //newPiece.transform.localRotation = Quaternion.Euler(90, 0, 0);
-        //newPiece.transform.localPosition = new Vector3(0, -.4f, 0);
+        if (frameObjectCurrent == null)
+        {
+            GameObject newFrame = Instantiate(frameObject, transform.position, Quaternion.identity);
+            newFrame.transform.SetParent(transform);
+            frameObjectCurrent = newFrame;
+            frameObjectCurrent.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            //newPiece.transform.localPosition = new Vector3(0, -.4f, 0);
+        }
 
         
 
@@ -673,66 +684,96 @@ public class BlockScript : MonoBehaviour
 
         if (rend == null)
         {
-            rend = GetComponent<Renderer>();
+            //rend = GetComponent<Renderer>();
         }
 
         pieceRend.enabled = false;
-        rend.enabled = false;
+        //rend.enabled = false;
+        GetComponent<Renderer>().enabled = false;
 
         Color newColor = Color.white;
 
         if (playerColor)
         {
-            piece = "pawn";
+            //piece = "pawn";
+        }
+
+        if (pieceObject != null)
+        {
+            Destroy(pieceObject);
         }
 
         if (piece == "pawn")
         {
             pieceRend.sprite = pawnSprite;
 
-            rend.material.SetColor("_Color", new Color(highColor, lowColor, lowColor));
+            //rend.material.SetColor("_Color", new Color(highColor, lowColor, lowColor));
 
-            newColor = new Color(highColor, lowColor, lowColor);
+            //newColor = new Color(highColor, lowColor, lowColor);
+
+            newColor = Color.red;
+
+            pieceObject = Instantiate(pawnObject, transform.position, Quaternion.identity);
         }
         else if (piece == "knight")
         {
             pieceRend.sprite = knightSprite;
 
-            rend.material.SetColor("_Color", new Color(highColor, highColor, lowColor));
+            //rend.material.SetColor("_Color", new Color(highColor, highColor, lowColor));
 
-            newColor = new Color(highColor, highColor, lowColor);
+            //newColor = new Color(highColor, highColor, lowColor);
+
+            newColor = Color.green;
+
+            pieceObject = Instantiate(knightObject, transform.position, Quaternion.identity);
         }
         else if (piece == "bishop")
         {
             pieceRend.sprite = bishopSprite;
 
-            rend.material.SetColor("_Color", new Color(lowColor, highColor, lowColor));
+            //rend.material.SetColor("_Color", new Color(lowColor, highColor, lowColor));
 
-            newColor = new Color(lowColor, highColor, lowColor);
+            //newColor = new Color(lowColor, highColor, lowColor);
+
+            newColor = new Color(.9f, .35f, 0);
+
+            pieceObject = Instantiate(bishopObject, transform.position, Quaternion.identity);
         }
         else if (piece == "rook")
         {
             pieceRend.sprite = rookSprite;
 
-            rend.material.SetColor("_Color", new Color(lowColor, highColor, highColor));
+            //rend.material.SetColor("_Color", new Color(lowColor, highColor, highColor));
 
-            newColor = new Color(lowColor, highColor, highColor);
+            //newColor = new Color(lowColor, highColor, highColor);
+
+            newColor = Color.blue;
+
+            pieceObject = Instantiate(rookObject, transform.position, Quaternion.identity);
         }
         else if (piece == "queen")
         {
             pieceRend.sprite = queenSprite;
 
-            rend.material.SetColor("_Color", new Color(lowColor, lowColor, highColor));
+            //rend.material.SetColor("_Color", new Color(lowColor, lowColor, highColor));
 
-            newColor = new Color(lowColor, lowColor, highColor);
+            //newColor = new Color(lowColor, lowColor, highColor);
+
+            newColor = Color.yellow;
+
+            pieceObject = Instantiate(queenObject, transform.position, Quaternion.identity);
         }
         else if (piece == "king")
         {
             pieceRend.sprite = kingSprite;
 
-            rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
+            //rend.material.SetColor("_Color", new Color(highColor, lowColor, highColor));
 
-            newColor = new Color(highColor, lowColor, highColor);
+            //newColor = new Color(highColor, lowColor, highColor);
+
+            newColor = new Color(.6f, 0, .8f);
+
+            pieceObject = Instantiate(kingObject, transform.position, Quaternion.identity);
         }
         /*
         foreach(Renderer r in pieceObject.GetComponentsInChildren<Renderer>())
@@ -742,17 +783,42 @@ public class BlockScript : MonoBehaviour
         */
         //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetColor("_Color", Color.white);
 
+        pieceObject.transform.SetParent(transform);
+        pieceObject.transform.localRotation = Quaternion.Euler(-90, 0, 0);
+        pieceObject.transform.localPosition = new Vector3(0, -.35f, 0);
+
+        foreach (Material m in frameObjectCurrent.GetComponent<Renderer>().materials)
+        {
+                        
+            if (m.name.Contains("FrameHighlight"))
+            {
+                m.SetColor("_Color", newColor);
+            }
+        }
+
+        rend = pieceObject.GetComponent<Renderer>();
+
+        float tint = .25f;
+
         if (playerColor)
         {
             pieceRend.color = Color.white;
+            //rend.material.SetColor("_Color", new Color(.8f, .8f, .8f));
+
+            rend.material.SetColor("_Color", new Color(1 - tint + (newColor.r * tint), 1 - tint + (newColor.g * tint), 1 - tint + (newColor.b * tint)));
 
             newColor = Color.white;
         }
         else
         {
             pieceRend.color = Color.black;
+            //rend.material.SetColor("_Color", new Color(.2f, .2f, .2f));
 
-            newColor = new Color(.5f, .5f, .5f);
+            rend.material.SetColor("_Color", new Color((newColor.r * tint), (newColor.g * tint), (newColor.b * tint)));
+
+            //newColor = new Color(.5f, .5f, .5f);
+
+            
 
             //pieceObject.transform.Find("PieceMain").GetComponent<Renderer>().material.SetTexture("_MainTex", darkTex);
         }
